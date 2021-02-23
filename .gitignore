@@ -1,4 +1,5 @@
 /.idea/
+/.vagrant/
 /id_rsa
 /id_rsa.pub
 /Vagrantfile.save
