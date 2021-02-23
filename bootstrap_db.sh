@@ -23,6 +23,6 @@ SQL="${Q1}${Q2}${Q3}${Q4}"
 
 $MYSQL -uroot -p$ROOTPASSWD -e "$SQL"
 
-sudo sed -i "s/bind-address.*/bind-address = 192.168.23.%/" /etc/mysql/mysql.conf.d/mysqld.cnf
+sudo sed -i "s/bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
 
 sudo service mysql restart
