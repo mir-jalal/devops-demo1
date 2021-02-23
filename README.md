@@ -155,7 +155,7 @@ ___
       
       In `bootstrap_db.sh`:
         <pre>
-        sudo sed -i "s/bind-address.*/bind-address = 192.168.23.%/" /etc/mysql/mysql.conf.d/mysqld.cnf
+        sudo sed -i "s/bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
   </pre>
   
     * Creation of a non-root user and password. 
