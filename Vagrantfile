@@ -12,7 +12,7 @@
 
 if ARGV[0] != 'plugin'
 
-  required_plugins = ['vagrant-hostmanager', 'vagrant-reload', 'vagrant-cachier', 'vagrant-faster']
+  required_plugins = ['vagrant-hostmanager', 'vagrant-reload', 'vagrant-cachier', 'vagrant-faster', 'vagrant-google']
   plugins = required_plugins.select { |plugin| not Vagrant.has_plugin? plugin }
   if not plugins.empty?
     puts "Installing plugins: #{plugins.join(' ')}"
@@ -26,9 +26,10 @@ end
 
 Vagrant.configure("2") do |config|
 
-  config.vm.provision "shell", privileged: false, path: "global.sh"
-
+  #config.vm.provision "shell", privileged: false, path: "global.sh"
   config.vm.boot_timeout = 1800
+
+  config.ssh.private_key_path = "/home/mirjalalcloud/.ssh/google_compute_engine"
 
   if Vagrant.has_plugin?("vagrant-hostmanager")
     config.hostmanager.enabled = true
@@ -38,17 +39,22 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define :DB_VM do |db|
-    db.vm.box = "ubuntu/focal64"
+    db.vm.box = "google/gce"
     db.vm.hostname = "db"
-    db.vm.network :private_network, ip: "192.168.23.10"
+    #db.vm.network :private_network, ip: "10.128.0.10"
     
-    db.vm.provider "virtualbox" do |vb|
-      vb.name = "DB_VM"
-      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
-      vb.customize ["modifyvm", :id, "--ioapic", "on"]
-      vb.memory = "3072"
-      vb.cpus = "3"
+    db.vm.provider "google" do |google, override|
+      google.name = "db-vm"
+      google.google_project_id = "devops-iba"
+      google.google_json_key_location = "/home/mirjalalcloud/GCP-API/key.json"
+
+      google.network_ip = "10.128.0.10"
+      
+      google.image_family = "ubuntu-2004-lts"
+      google.image_project_id = "ubuntu-os-cloud"
+
+      override.ssh.username = "mirjalalcloud"
+      override.ssh.private_key_path = "/home/mirjalalcloud/.ssh/google_compute_engine"
     end
     db.vm.provision "shell" do |s|      
       s.path = "bootstrap_db.sh"
@@ -57,19 +63,24 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.define :APP_VM do |app|
-    app.vm.box = "ubuntu/focal64"
+    app.vm.box = "google/gce"
     app.vm.hostname = "app"
-    app.vm.network :private_network, ip: "192.168.23.11"
+    #app.vm.network :private_network, ip: "10.128.0.11"
     app.vm.network "forwarded_port", guest:8080, host: 8081,
     auto_correct: true
     app.vm.usable_port_range = 8080..8999
-    app.vm.provider "virtualbox" do |vb|
-      vb.name = "APP_VM"
-      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
-      vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
-      vb.customize ["modifyvm", :id, "--ioapic", "on"]
-      vb.memory = "3072"
-      vb.cpus = "3"
+    app.vm.provider "google" do |google, override|
+      google.name = "app-vm"
+      google.google_project_id = "devops-iba"
+      google.google_json_key_location = "/home/mirjalalcloud/GCP-API/key.json"
+
+      google.network_ip = "10.128.0.11"
+
+      google.image_family = "ubuntu-2004-lts"
+      google.image_project_id = "ubuntu-os-cloud"
+
+      override.ssh.username = "mirjalalcloud"
+      override.ssh.private_key_path = "/home/mirjalalcloud/.ssh/google_compute_engine"
     end
     app.vm.provision "shell", path: "useradd.sh"
     app.vm.provision "shell", path: "bootstrap_app.sh", privileged: false
